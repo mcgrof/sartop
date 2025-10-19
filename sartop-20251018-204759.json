@@ -1,0 +1,637 @@
+{
+  "start_time": "2025-10-18T20:47:28.028869",
+  "end_time": "2025-10-18T20:47:59.262244",
+  "duration_seconds": 31.233376,
+  "sample_count": 29,
+  "statistics": {
+    "cpu": {
+      "avg": 11.534137931034483,
+      "max": 16.0,
+      "min": 8.299999999999997
+    },
+    "memory": {
+      "avg": 18.950344827586203,
+      "max": 19.18,
+      "min": 18.74
+    },
+    "network_rx": {
+      "avg": 0,
+      "max": 6.0
+    },
+    "network_tx": {
+      "avg": 0,
+      "max": 0.77
+    }
+  },
+  "data": [
+    {
+      "cpu": {
+        "user": 9.52,
+        "system": 0.38,
+        "iowait": 0.0,
+        "idle": 90.1
+      },
+      "memory": {
+        "used_percent": 18.74,
+        "buffers": 0,
+        "cached": 0
+      },
+      "network": {
+        "PM": {
+          "rxkB": 0.0,
+          "txkB": 0.0
+        }
+      },
+      "disk": {},
+      "timestamp": "2025-10-18T20:47:30.029325"
+    },
+    {
+      "cpu": {
+        "user": 9.52,
+        "system": 0.38,
+        "iowait": 0.0,
+        "idle": 90.1
+      },
+      "memory": {
+        "used_percent": 18.74,
+        "buffers": 0,
+        "cached": 0
+      },
+      "network": {
+        "PM": {
+          "rxkB": 0.0,
+          "txkB": 0.0
+        }
+      },
+      "disk": {},
+      "timestamp": "2025-10-18T20:47:31.031168"
+    },
+    {
+      "cpu": {
+        "user": 10.15,
+        "system": 0.38,
+        "iowait": 0.0,
+        "idle": 89.47
+      },
+      "memory": {
+        "used_percent": 18.76,
+        "buffers": 0,
+        "cached": 0
+      },
+      "network": {
+        "PM": {
+          "rxkB": 0.0,
+          "txkB": 0.0
+        }
+      },
+      "disk": {},
+      "timestamp": "2025-10-18T20:47:32.031671"
+    },
+    {
+      "cpu": {
+        "user": 10.15,
+        "system": 0.38,
+        "iowait": 0.0,
+        "idle": 89.47
+      },
+      "memory": {
+        "used_percent": 18.76,
+        "buffers": 0,
+        "cached": 0
+      },
+      "network": {
+        "PM": {
+          "rxkB": 0.0,
+          "txkB": 0.0
+        }
+      },
+      "disk": {},
+      "timestamp": "2025-10-18T20:47:33.032614"
+    },
+    {
+      "cpu": {
+        "user": 8.45,
+        "system": 0.38,
+        "iowait": 0.06,
+        "idle": 91.11
+      },
+      "memory": {
+        "used_percent": 18.75,
+        "buffers": 0,
+        "cached": 0
+      },
+      "network": {
+        "PM": {
+          "rxkB": 0.0,
+          "txkB": 0.0
+        }
+      },
+      "disk": {},
+      "timestamp": "2025-10-18T20:47:34.033389"
+    },
+    {
+      "cpu": {
+        "user": 8.45,
+        "system": 0.38,
+        "iowait": 0.06,
+        "idle": 91.11
+      },
+      "memory": {
+        "used_percent": 18.75,
+        "buffers": 0,
+        "cached": 0
+      },
+      "network": {
+        "PM": {
+          "rxkB": 0.0,
+          "txkB": 0.0
+        }
+      },
+      "disk": {},
+      "timestamp": "2025-10-18T20:47:35.033992"
+    },
+    {
+      "cpu": {
+        "user": 8.76,
+        "system": 0.13,
+        "iowait": 0.0,
+        "idle": 91.11
+      },
+      "memory": {
+        "used_percent": 18.74,
+        "buffers": 0,
+        "cached": 0
+      },
+      "network": {
+        "PM": {
+          "rxkB": 0.0,
+          "txkB": 0.0
+        }
+      },
+      "disk": {},
+      "timestamp": "2025-10-18T20:47:36.035191"
+    },
+    {
+      "cpu": {
+        "user": 8.76,
+        "system": 0.13,
+        "iowait": 0.0,
+        "idle": 91.11
+      },
+      "memory": {
+        "used_percent": 18.74,
+        "buffers": 0,
+        "cached": 0
+      },
+      "network": {
+        "PM": {
+          "rxkB": 0.0,
+          "txkB": 0.0
+        }
+      },
+      "disk": {},
+      "timestamp": "2025-10-18T20:47:37.035711"
+    },
+    {
+      "cpu": {
+        "user": 10.22,
+        "system": 0.69,
+        "iowait": 0.0,
+        "idle": 89.03
+      },
+      "memory": {
+        "used_percent": 18.74,
+        "buffers": 0,
+        "cached": 0
+      },
+      "network": {
+        "PM": {
+          "rxkB": 6.0,
+          "txkB": 0.77
+        }
+      },
+      "disk": {},
+      "timestamp": "2025-10-18T20:47:38.036273"
+    },
+    {
+      "cpu": {
+        "user": 10.22,
+        "system": 0.69,
+        "iowait": 0.0,
+        "idle": 89.03
+      },
+      "memory": {
+        "used_percent": 18.74,
+        "buffers": 0,
+        "cached": 0
+      },
+      "network": {
+        "PM": {
+          "rxkB": 6.0,
+          "txkB": 0.77
+        }
+      },
+      "disk": {},
+      "timestamp": "2025-10-18T20:47:39.036760"
+    },
+    {
+      "cpu": {
+        "user": 13.35,
+        "system": 1.19,
+        "iowait": 0.06,
+        "idle": 85.39
+      },
+      "memory": {
+        "used_percent": 18.74,
+        "buffers": 0,
+        "cached": 0
+      },
+      "network": {
+        "PM": {
+          "rxkB": 0.0,
+          "txkB": 0.0
+        }
+      },
+      "disk": {},
+      "timestamp": "2025-10-18T20:47:40.037277"
+    },
+    {
+      "cpu": {
+        "user": 13.35,
+        "system": 1.19,
+        "iowait": 0.06,
+        "idle": 85.39
+      },
+      "memory": {
+        "used_percent": 18.74,
+        "buffers": 0,
+        "cached": 0
+      },
+      "network": {
+        "PM": {
+          "rxkB": 0.0,
+          "txkB": 0.0
+        }
+      },
+      "disk": {},
+      "timestamp": "2025-10-18T20:47:41.037774"
+    },
+    {
+      "cpu": {
+        "user": 14.18,
+        "system": 0.82,
+        "iowait": 0.06,
+        "idle": 84.94
+      },
+      "memory": {
+        "used_percent": 18.78,
+        "buffers": 0,
+        "cached": 0
+      },
+      "network": {
+        "PM": {
+          "rxkB": 0.0,
+          "txkB": 0.0
+        }
+      },
+      "disk": {},
+      "timestamp": "2025-10-18T20:47:42.038283"
+    },
+    {
+      "cpu": {
+        "user": 14.18,
+        "system": 0.82,
+        "iowait": 0.06,
+        "idle": 84.94
+      },
+      "memory": {
+        "used_percent": 18.78,
+        "buffers": 0,
+        "cached": 0
+      },
+      "network": {
+        "PM": {
+          "rxkB": 0.0,
+          "txkB": 0.0
+        }
+      },
+      "disk": {},
+      "timestamp": "2025-10-18T20:47:43.038900"
+    },
+    {
+      "cpu": {
+        "user": 14.56,
+        "system": 1.19,
+        "iowait": 0.25,
+        "idle": 84.0
+      },
+      "memory": {
+        "used_percent": 19.09,
+        "buffers": 0,
+        "cached": 0
+      },
+      "network": {
+        "PM": {
+          "rxkB": 0.0,
+          "txkB": 0.0
+        }
+      },
+      "disk": {},
+      "timestamp": "2025-10-18T20:47:44.039442"
+    },
+    {
+      "cpu": {
+        "user": 14.56,
+        "system": 1.19,
+        "iowait": 0.25,
+        "idle": 84.0
+      },
+      "memory": {
+        "used_percent": 19.09,
+        "buffers": 0,
+        "cached": 0
+      },
+      "network": {
+        "PM": {
+          "rxkB": 0.0,
+          "txkB": 0.0
+        }
+      },
+      "disk": {},
+      "timestamp": "2025-10-18T20:47:45.039948"
+    },
+    {
+      "cpu": {
+        "user": 15.52,
+        "system": 0.25,
+        "iowait": 0.06,
+        "idle": 84.17
+      },
+      "memory": {
+        "used_percent": 19.1,
+        "buffers": 0,
+        "cached": 0
+      },
+      "network": {
+        "PM": {
+          "rxkB": 0.0,
+          "txkB": 0.0
+        }
+      },
+      "disk": {},
+      "timestamp": "2025-10-18T20:47:46.040441"
+    },
+    {
+      "cpu": {
+        "user": 15.52,
+        "system": 0.25,
+        "iowait": 0.06,
+        "idle": 84.17
+      },
+      "memory": {
+        "used_percent": 19.1,
+        "buffers": 0,
+        "cached": 0
+      },
+      "network": {
+        "PM": {
+          "rxkB": 0.0,
+          "txkB": 0.0
+        }
+      },
+      "disk": {},
+      "timestamp": "2025-10-18T20:47:47.041110"
+    },
+    {
+      "cpu": {
+        "user": 15.0,
+        "system": 0.25,
+        "iowait": 0.0,
+        "idle": 84.75
+      },
+      "memory": {
+        "used_percent": 19.11,
+        "buffers": 0,
+        "cached": 0
+      },
+      "network": {
+        "PM": {
+          "rxkB": 0.0,
+          "txkB": 0.0
+        }
+      },
+      "disk": {},
+      "timestamp": "2025-10-18T20:47:48.041783"
+    },
+    {
+      "cpu": {
+        "user": 15.0,
+        "system": 0.25,
+        "iowait": 0.0,
+        "idle": 84.75
+      },
+      "memory": {
+        "used_percent": 19.11,
+        "buffers": 0,
+        "cached": 0
+      },
+      "network": {
+        "PM": {
+          "rxkB": 0.0,
+          "txkB": 0.0
+        }
+      },
+      "disk": {},
+      "timestamp": "2025-10-18T20:47:49.042410"
+    },
+    {
+      "cpu": {
+        "user": 9.98,
+        "system": 0.5,
+        "iowait": 0.06,
+        "idle": 89.46
+      },
+      "memory": {
+        "used_percent": 19.15,
+        "buffers": 0,
+        "cached": 0
+      },
+      "network": {
+        "PM": {
+          "rxkB": 0.0,
+          "txkB": 0.0
+        }
+      },
+      "disk": {},
+      "timestamp": "2025-10-18T20:47:50.043153"
+    },
+    {
+      "cpu": {
+        "user": 9.98,
+        "system": 0.5,
+        "iowait": 0.06,
+        "idle": 89.46
+      },
+      "memory": {
+        "used_percent": 19.15,
+        "buffers": 0,
+        "cached": 0
+      },
+      "network": {
+        "PM": {
+          "rxkB": 0.0,
+          "txkB": 0.0
+        }
+      },
+      "disk": {},
+      "timestamp": "2025-10-18T20:47:51.043792"
+    },
+    {
+      "cpu": {
+        "user": 7.93,
+        "system": 0.37,
+        "iowait": 0.0,
+        "idle": 91.7
+      },
+      "memory": {
+        "used_percent": 19.15,
+        "buffers": 0,
+        "cached": 0
+      },
+      "network": {
+        "PM": {
+          "rxkB": 0.0,
+          "txkB": 0.0
+        }
+      },
+      "disk": {},
+      "timestamp": "2025-10-18T20:47:52.044747"
+    },
+    {
+      "cpu": {
+        "user": 7.93,
+        "system": 0.37,
+        "iowait": 0.0,
+        "idle": 91.7
+      },
+      "memory": {
+        "used_percent": 19.15,
+        "buffers": 0,
+        "cached": 0
+      },
+      "network": {
+        "PM": {
+          "rxkB": 0.0,
+          "txkB": 0.0
+        }
+      },
+      "disk": {},
+      "timestamp": "2025-10-18T20:47:53.066012"
+    },
+    {
+      "cpu": {
+        "user": 8.52,
+        "system": 0.38,
+        "iowait": 0.0,
+        "idle": 90.86
+      },
+      "memory": {
+        "used_percent": 19.18,
+        "buffers": 0,
+        "cached": 0
+      },
+      "network": {
+        "PM": {
+          "rxkB": 0.0,
+          "txkB": 0.0
+        }
+      },
+      "disk": {},
+      "timestamp": "2025-10-18T20:47:54.066747"
+    },
+    {
+      "cpu": {
+        "user": 8.52,
+        "system": 0.38,
+        "iowait": 0.0,
+        "idle": 90.86
+      },
+      "memory": {
+        "used_percent": 19.18,
+        "buffers": 0,
+        "cached": 0
+      },
+      "network": {
+        "PM": {
+          "rxkB": 0.0,
+          "txkB": 0.0
+        }
+      },
+      "disk": {},
+      "timestamp": "2025-10-18T20:47:55.068970"
+    },
+    {
+      "cpu": {
+        "user": 8.08,
+        "system": 0.38,
+        "iowait": 0.0,
+        "idle": 91.55
+      },
+      "memory": {
+        "used_percent": 19.17,
+        "buffers": 0,
+        "cached": 0
+      },
+      "network": {
+        "PM": {
+          "rxkB": 0.0,
+          "txkB": 0.0
+        }
+      },
+      "disk": {},
+      "timestamp": "2025-10-18T20:47:56.070043"
+    },
+    {
+      "cpu": {
+        "user": 8.08,
+        "system": 0.38,
+        "iowait": 0.0,
+        "idle": 91.55
+      },
+      "memory": {
+        "used_percent": 19.17,
+        "buffers": 0,
+        "cached": 0
+      },
+      "network": {
+        "PM": {
+          "rxkB": 0.0,
+          "txkB": 0.0
+        }
+      },
+      "disk": {},
+      "timestamp": "2025-10-18T20:47:57.070576"
+    },
+    {
+      "cpu": {
+        "user": 8.83,
+        "system": 0.94,
+        "iowait": 0.0,
+        "idle": 90.23
+      },
+      "memory": {
+        "used_percent": 19.16,
+        "buffers": 0,
+        "cached": 0
+      },
+      "network": {
+        "PM": {
+          "rxkB": 0.0,
+          "txkB": 0.0
+        }
+      },
+      "disk": {},
+      "timestamp": "2025-10-18T20:47:58.071591"
+    }
+  ]
+}
