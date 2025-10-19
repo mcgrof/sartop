@@ -218,6 +218,224 @@ class Graph:
         return "".join(out)
 
 
+class DualDirectionGraph:
+    """Dual-direction graph showing reads (up) and writes (down) from center line"""
+
+    def __init__(self, width: int, height: int, max_value: float = 10000.0):
+        self.width = width
+        self.height = height
+        self.max_value = max_value
+        self.read_data = deque(maxlen=width)
+        self.write_data = deque(maxlen=width)
+        self.center_line = height // 2
+
+    def add_values(self, read: float, write: float):
+        """Add new read and write values"""
+        self.read_data.append(min(read, self.max_value))
+        self.write_data.append(min(write, self.max_value))
+
+    def draw(self, x: int, y: int, gradient: List[Tuple[int, int, int]]) -> str:
+        """Draw dual-direction graph with reads above center, writes below"""
+        out = []
+
+        # Prepare data lists
+        read_list = list(self.read_data)
+        write_list = list(self.write_data)
+        while len(read_list) < self.width:
+            read_list.insert(0, 0)
+            write_list.insert(0, 0)
+
+        # Create grid
+        grid = [[" " for _ in range(self.width)] for _ in range(self.height)]
+        colors = [[(0, 0, 0) for _ in range(self.width)] for _ in range(self.height)]
+
+        # Draw center line
+        for col in range(self.width):
+            grid[self.center_line][col] = "─"
+            colors[self.center_line][col] = (100, 100, 100)
+
+        # Plot reads (going upward from center)
+        for col, value in enumerate(read_list):
+            if value > 0:
+                intensity = value / self.max_value
+                bar_height = int((intensity * self.center_line))
+                for row in range(max(0, self.center_line - bar_height), self.center_line):
+                    grid[row][col] = "│"
+                    colors[row][col] = intensity
+
+        # Plot writes (going downward from center)
+        for col, value in enumerate(write_list):
+            if value > 0:
+                intensity = value / self.max_value
+                bar_height = int((intensity * (self.height - self.center_line)))
+                for row in range(self.center_line + 1, min(self.height, self.center_line + bar_height + 1)):
+                    grid[row][col] = "│"
+                    colors[row][col] = intensity
+
+        # Render with colors
+        for row in range(self.height):
+            out.append(f"\033[{y + row};{x}f")
+            for col in range(self.width):
+                char = grid[row][col]
+                if char == "─":
+                    out.append(Color.fg(100, 100, 100) + char)
+                elif char == "│":
+                    color = Color.gradient(colors[row][col], gradient)
+                    out.append(color + char)
+                else:
+                    out.append(" ")
+            out.append(Term.normal)
+
+        return "".join(out)
+
+
+class IntensityMeter:
+    """Unicode block-based intensity meter for IOPS visualization"""
+
+    BLOCKS = " ▁▂▃▄▅▆▇█"
+
+    @staticmethod
+    def draw(x: int, y: int, width: int, value: float, max_value: float,
+             label: str = "", gradient: List[Tuple[int, int, int]] = None) -> str:
+        """Draw horizontal intensity meter using Unicode blocks"""
+        out = []
+        if gradient is None:
+            gradient = Theme.io_gradient
+
+        # Calculate intensity (0.0 to 1.0)
+        intensity = min(value / max_value, 1.0) if max_value > 0 else 0.0
+
+        # Draw label
+        if label:
+            out.append(f"\033[{y};{x}f{Theme.text}{label}: ")
+            label_len = len(label) + 2
+        else:
+            out.append(f"\033[{y};{x}f")
+            label_len = 0
+
+        # Calculate filled width
+        filled_width = int(intensity * width)
+
+        # Draw filled blocks
+        color = Color.gradient(intensity, gradient)
+        for i in range(filled_width):
+            block_intensity = min((i + 1) / width, 1.0)
+            block_idx = int(block_intensity * (len(IntensityMeter.BLOCKS) - 1))
+            out.append(color + IntensityMeter.BLOCKS[block_idx])
+
+        # Draw empty blocks
+        for i in range(filled_width, width):
+            out.append(Theme.border + IntensityMeter.BLOCKS[0])
+
+        # Draw value
+        out.append(f" {Theme.selected}{value:.1f}")
+        out.append(Term.normal)
+
+        return "".join(out)
+
+
+class UtilizationBar:
+    """Horizontal bar showing device utilization percentage"""
+
+    @staticmethod
+    def draw(x: int, y: int, width: int, util_percent: float, label: str = "") -> str:
+        """Draw utilization bar with color coding"""
+        out = []
+
+        # Label
+        if label:
+            out.append(f"\033[{y};{x}f{Theme.text}{label}: ")
+            label_len = len(label) + 2
+        else:
+            out.append(f"\033[{y};{x}f")
+            label_len = 0
+
+        # Color based on utilization
+        if util_percent < 50:
+            color = Color.fg(0, 200, 0)  # Green
+        elif util_percent < 80:
+            color = Color.fg(200, 200, 0)  # Yellow
+        else:
+            color = Color.fg(255, 0, 0)  # Red
+
+        # Draw bar
+        filled = int((util_percent / 100.0) * width)
+        out.append(color + "█" * filled)
+        out.append(Theme.border + "░" * (width - filled))
+        out.append(f" {Theme.selected}{util_percent:.1f}%")
+        out.append(Term.normal)
+
+        return "".join(out)
+
+
+class LatencyGauge:
+    """Visual latency indicator with color-coded warnings"""
+
+    @staticmethod
+    def draw(x: int, y: int, await_ms: float, label: str = "") -> str:
+        """Draw latency gauge with color coding (green < 10ms, yellow < 50ms, red >= 50ms)"""
+        out = []
+
+        # Determine color and status
+        if await_ms < 10:
+            color = Color.fg(0, 255, 0)  # Green
+            status = "●"
+            status_text = "FAST"
+        elif await_ms < 50:
+            color = Color.fg(255, 255, 0)  # Yellow
+            status = "◐"
+            status_text = "MODERATE"
+        else:
+            color = Color.fg(255, 0, 0)  # Red
+            status = "●"
+            status_text = "SLOW"
+
+        # Draw
+        out.append(f"\033[{y};{x}f{Theme.text}{label}: {color}{status} {await_ms:.2f}ms {Term.dim}({status_text})")
+        out.append(Term.normal)
+
+        return "".join(out)
+
+
+class DiskHeatmap:
+    """Timeline heatmap showing I/O activity intensity over time"""
+
+    def __init__(self, width: int):
+        self.width = width
+        self.history = deque(maxlen=width)
+
+    def add_value(self, value: float):
+        """Add a new intensity value (0.0 to 1.0)"""
+        self.history.append(min(value, 1.0))
+
+    def draw(self, x: int, y: int, gradient: List[Tuple[int, int, int]]) -> str:
+        """Draw heatmap timeline using background colors"""
+        out = [f"\033[{y};{x}f"]
+
+        # Fill with zeros if needed
+        data_list = list(self.history)
+        while len(data_list) < self.width:
+            data_list.insert(0, 0)
+
+        # Draw each cell with background color
+        for value in data_list:
+            if value < 0.1:
+                # Very low activity - dark
+                out.append(Color.bg(20, 20, 20) + " ")
+            else:
+                # Scale to gradient
+                color_val = Color.gradient(value, gradient)
+                # Extract RGB from color string (hacky but works)
+                out.append(Color.bg(
+                    int(50 + value * 205),
+                    int(50 + value * 100),
+                    int(50)
+                ) + " ")
+
+        out.append(Term.normal)
+        return "".join(out)
+
+
 class SARCollector:
     """Collects SAR data using sar command"""
 
@@ -344,14 +562,20 @@ class SARCollector:
 
             elif section == 'disk':
                 parts = line.split()
-                if len(parts) >= 6 and parts[0] not in ['Average:', 'DEV']:
+                if len(parts) >= 11 and parts[0] not in ['Average:', 'DEV']:
                     try:
-                        # Time DEV tps rkB/s wkB/s ...
-                        dev = parts[1]
+                        # Format: Time PM DEV tps rkB/s wkB/s dkB/s areq-sz aqu-sz await %util
+                        # Or:     Time AM DEV tps rkB/s wkB/s dkB/s areq-sz aqu-sz await %util
+                        dev = parts[2]  # Device name is at position 2
                         data['disk'][dev] = {
-                            'tps': float(parts[2]),
-                            'rkB': float(parts[3]),
-                            'wkB': float(parts[4])
+                            'tps': float(parts[3]),
+                            'rkB': float(parts[4]),
+                            'wkB': float(parts[5]),
+                            'dkB': float(parts[6]),
+                            'areq_sz': float(parts[7]),
+                            'aqu_sz': float(parts[8]),
+                            'await': float(parts[9]),
+                            'util': float(parts[10])
                         }
                     except:
                         pass
@@ -375,6 +599,7 @@ class SARTop:
         # Data storage
         self.history = []
         self.start_time = None
+        self.base_filename = None  # Will be set when saving
 
         # Graphs
         graph_width = 60
@@ -385,13 +610,30 @@ class SARTop:
         self.net_rx_graph = Graph(graph_width, graph_height, 10000)  # kB/s
         self.net_tx_graph = Graph(graph_width, graph_height, 10000)  # kB/s
 
+        # Disk I/O graphs and visualizers
+        self.disk_io_graph = DualDirectionGraph(graph_width, graph_height, 50000)  # kB/s
+        self.disk_iops_graph = Graph(graph_width, graph_height, 1000)  # tps
+        self.disk_util_heatmap = DiskHeatmap(graph_width)
+        self.disk_latency_graph = Graph(graph_width, graph_height, 100)  # ms
+
         # Statistics
         self.stats = {
             'cpu': {'avg': 0, 'max': 0, 'min': 100},
             'memory': {'avg': 0, 'max': 0, 'min': 100},
             'network_rx': {'avg': 0, 'max': 0},
-            'network_tx': {'avg': 0, 'max': 0}
+            'network_tx': {'avg': 0, 'max': 0},
+            'disk': {
+                'read_kBps': {'avg': 0, 'max': 0, 'total': 0},
+                'write_kBps': {'avg': 0, 'max': 0, 'total': 0},
+                'tps': {'avg': 0, 'max': 0},
+                'await': {'avg': 0, 'max': 0, 'min': 999999},
+                'util': {'avg': 0, 'max': 0},
+                'per_device': {}  # Stats per device
+            }
         }
+
+        # Disk I/O display mode (0=Overview, 1=Detailed, 2=Heatmap, 3=IOPS)
+        self.disk_mode = 0
 
     def start(self):
         """Start monitoring"""
@@ -442,8 +684,25 @@ class SARTop:
         self.net_rx_graph.add_value(total_rx)
         self.net_tx_graph.add_value(total_tx)
 
+        # Sum disk I/O across all devices
+        disk_data = data.get('disk', {})
+        total_read = sum(dev['rkB'] for dev in disk_data.values())
+        total_write = sum(dev['wkB'] for dev in disk_data.values())
+        total_tps = sum(dev['tps'] for dev in disk_data.values())
+
+        # Calculate average latency and max utilization across devices
+        avg_await = sum(dev['await'] for dev in disk_data.values()) / len(disk_data) if disk_data else 0
+        max_util = max((dev['util'] for dev in disk_data.values()), default=0)
+
+        # Update disk I/O graphs
+        self.disk_io_graph.add_values(total_read, total_write)
+        self.disk_iops_graph.add_value(total_tps)
+        self.disk_util_heatmap.add_value(max_util / 100.0)
+        self.disk_latency_graph.add_value(avg_await)
+
         # Update statistics
-        self._update_stats(cpu_used, mem_used, total_rx, total_tx)
+        self._update_stats(cpu_used, mem_used, total_rx, total_tx,
+                          total_read, total_write, total_tps, avg_await, max_util, disk_data)
 
         # Refresh terminal size
         Term.refresh()
@@ -451,7 +710,9 @@ class SARTop:
         # Draw UI
         self._draw()
 
-    def _update_stats(self, cpu: float, mem: float, rx: float, tx: float):
+    def _update_stats(self, cpu: float, mem: float, rx: float, tx: float,
+                     disk_read: float, disk_write: float, disk_tps: float,
+                     disk_await: float, disk_util: float, disk_devices: Dict):
         """Update running statistics"""
         if len(self.history) == 0:
             return
@@ -469,6 +730,57 @@ class SARTop:
         # Network stats
         self.stats['network_rx']['max'] = max(self.stats['network_rx']['max'], rx)
         self.stats['network_tx']['max'] = max(self.stats['network_tx']['max'], tx)
+
+        # Disk I/O stats
+        self.stats['disk']['read_kBps']['max'] = max(self.stats['disk']['read_kBps']['max'], disk_read)
+        self.stats['disk']['write_kBps']['max'] = max(self.stats['disk']['write_kBps']['max'], disk_write)
+        self.stats['disk']['tps']['max'] = max(self.stats['disk']['tps']['max'], disk_tps)
+        self.stats['disk']['await']['max'] = max(self.stats['disk']['await']['max'], disk_await)
+        self.stats['disk']['await']['min'] = min(self.stats['disk']['await']['min'], disk_await) if disk_await > 0 else self.stats['disk']['await']['min']
+        self.stats['disk']['util']['max'] = max(self.stats['disk']['util']['max'], disk_util)
+
+        # Calculate averages from history
+        total_samples = len(self.history)
+        total_read = 0
+        total_write = 0
+        total_tps = 0
+        total_await = 0
+        total_util = 0
+        await_count = 0
+
+        for d in self.history:
+            disk_data = d.get('disk', {})
+            total_read += sum(dev['rkB'] for dev in disk_data.values())
+            total_write += sum(dev['wkB'] for dev in disk_data.values())
+            total_tps += sum(dev['tps'] for dev in disk_data.values())
+
+            if disk_data:
+                avg_await = sum(dev['await'] for dev in disk_data.values()) / len(disk_data)
+                total_await += avg_await
+                await_count += 1
+                total_util += max((dev['util'] for dev in disk_data.values()), default=0)
+
+        self.stats['disk']['read_kBps']['avg'] = total_read / total_samples
+        self.stats['disk']['write_kBps']['avg'] = total_write / total_samples
+        self.stats['disk']['tps']['avg'] = total_tps / total_samples
+        self.stats['disk']['await']['avg'] = total_await / await_count if await_count > 0 else 0
+        self.stats['disk']['util']['avg'] = total_util / total_samples
+
+        # Per-device statistics
+        for dev_name, dev_data in disk_devices.items():
+            if dev_name not in self.stats['disk']['per_device']:
+                self.stats['disk']['per_device'][dev_name] = {
+                    'read_max': 0, 'write_max': 0, 'tps_max': 0,
+                    'await_max': 0, 'util_max': 0, 'samples': 0
+                }
+
+            dev_stats = self.stats['disk']['per_device'][dev_name]
+            dev_stats['read_max'] = max(dev_stats['read_max'], dev_data['rkB'])
+            dev_stats['write_max'] = max(dev_stats['write_max'], dev_data['wkB'])
+            dev_stats['tps_max'] = max(dev_stats['tps_max'], dev_data['tps'])
+            dev_stats['await_max'] = max(dev_stats['await_max'], dev_data['await'])
+            dev_stats['util_max'] = max(dev_stats['util_max'], dev_data['util'])
+            dev_stats['samples'] += 1
 
     def _draw(self):
         """Draw the UI"""
@@ -543,6 +855,85 @@ class SARTop:
         graph_y = y + 3
         out.append(self.net_tx_graph.draw(graph_x, graph_y, Theme.io_gradient))
 
+        # ============================================================
+        # DISK I/O SECTION - Comprehensive visualizations
+        # ============================================================
+        y += box_height + 1
+
+        # Get disk data
+        disk_data = latest.get('disk', {})
+        total_read = sum(dev['rkB'] for dev in disk_data.values())
+        total_write = sum(dev['wkB'] for dev in disk_data.values())
+        total_tps = sum(dev['tps'] for dev in disk_data.values())
+
+        # Main Disk I/O Box - Dual Direction Graph
+        disk_box_height = 14
+        disk_box_width = Term.width - 4
+        out.append(Box.draw(2, y, disk_box_width, disk_box_height,
+                           f"Disk I/O - Read/Write Activity (Read: ↑ {total_read:.1f} kB/s | Write: ↓ {total_write:.1f} kB/s)"))
+
+        # Draw dual-direction graph
+        graph_x = 4
+        graph_y = y + 2
+        out.append(self.disk_io_graph.draw(graph_x, graph_y, Theme.io_gradient))
+
+        # Add Read/Write labels
+        out.append(f"\033[{y+1};{4}f{Theme.text}Read ↑")
+        out.append(f"\033[{y+disk_box_height-2};{4}f{Theme.text}Write ↓")
+
+        # Stats on the right side of the graph
+        stats_x = graph_x + 62
+        out.append(f"\033[{y+2};{stats_x}f{Theme.text}Total I/O")
+        out.append(f"\033[{y+3};{stats_x}f{Theme.text}Read:  {Theme.selected}{self.stats['disk']['read_kBps']['avg']:.1f} {Theme.text}kB/s avg")
+        out.append(f"\033[{y+4};{stats_x}f{Theme.text}       {Theme.selected}{self.stats['disk']['read_kBps']['max']:.1f} {Theme.text}kB/s peak")
+        out.append(f"\033[{y+5};{stats_x}f{Theme.text}Write: {Theme.selected}{self.stats['disk']['write_kBps']['avg']:.1f} {Theme.text}kB/s avg")
+        out.append(f"\033[{y+6};{stats_x}f{Theme.text}       {Theme.selected}{self.stats['disk']['write_kBps']['max']:.1f} {Theme.text}kB/s peak")
+
+        out.append(f"\033[{y+8};{stats_x}f{Theme.text}IOPS: {Theme.selected}{total_tps:.1f} {Theme.text}tps")
+        out.append(f"\033[{y+9};{stats_x}f{Theme.text}Peak: {Theme.selected}{self.stats['disk']['tps']['max']:.1f} {Theme.text}tps")
+
+        # Per-Device Metrics Section
+        y += disk_box_height + 1
+
+        if disk_data:
+            # Calculate layout for per-device section
+            num_devices = len(disk_data)
+            device_box_height = 8 + num_devices
+            out.append(Box.draw(2, y, disk_box_width, device_box_height,
+                               f"Per-Device Metrics ({num_devices} device{'s' if num_devices != 1 else ''})"))
+
+            dev_y = y + 1
+            for dev_name, dev_metrics in sorted(disk_data.items()):
+                dev_y += 1
+
+                # Device name and key metrics
+                out.append(f"\033[{dev_y};{4}f{Theme.title}{Term.bold}{dev_name}{Term.normal}")
+
+                # IOPS Intensity Meter
+                out.append(IntensityMeter.draw(6, dev_y + 1, 30, dev_metrics['tps'],
+                                              self.stats['disk']['tps']['max'] or 100,
+                                              "IOPS", Theme.io_gradient))
+
+                # Utilization Bar
+                out.append(UtilizationBar.draw(50, dev_y + 1, 25, dev_metrics['util'], "Util"))
+
+                # Read/Write rates
+                out.append(f"\033[{dev_y + 1};{90}f{Theme.text}R: {Theme.selected}{dev_metrics['rkB']:.1f} {Theme.text}kB/s")
+                out.append(f"\033[{dev_y + 1};{110}f{Theme.text}W: {Theme.selected}{dev_metrics['wkB']:.1f} {Theme.text}kB/s")
+
+                # Latency Gauge
+                out.append(LatencyGauge.draw(6, dev_y + 2, dev_metrics['await'], "Latency"))
+
+                # Queue size and request size
+                out.append(f"\033[{dev_y + 2};{50}f{Theme.text}Queue: {Theme.selected}{dev_metrics['aqu_sz']:.2f}")
+                out.append(f"\033[{dev_y + 2};{70}f{Theme.text}Avg Req: {Theme.selected}{dev_metrics['areq_sz']:.1f} {Theme.text}kB")
+
+                # Discard rate (for SSDs)
+                if dev_metrics['dkB'] > 0:
+                    out.append(f"\033[{dev_y + 2};{95}f{Theme.text}Discard: {Theme.selected}{dev_metrics['dkB']:.1f} {Theme.text}kB/s")
+
+                dev_y += 2
+
         # Instructions at bottom
         y = Term.height - 1
         instructions = "Press Ctrl+C to exit and save data"
@@ -564,18 +955,22 @@ class SARTop:
             self._save_json()
             if MATPLOTLIB_AVAILABLE:
                 self._save_plot()
-            self._print_summary()
+            self._save_summary()
 
     def _save_json(self):
         """Save collected data to JSON file"""
         timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-        filename = f"sartop-{timestamp}.json"
+        # Use hostname for system identifier, similar to gputop's vendor name
+        hostname = os.uname().nodename.split('.')[0]
+        self.base_filename = f"sartop-{hostname}-{timestamp}"
+        filename = f"{self.base_filename}.json"
 
         output_data = {
             'start_time': self.start_time.isoformat(),
             'end_time': datetime.now().isoformat(),
             'duration_seconds': (datetime.now() - self.start_time).total_seconds(),
             'sample_count': len(self.history),
+            'hostname': hostname,
             'statistics': self.stats,
             'data': self.history
         }
@@ -586,9 +981,13 @@ class SARTop:
         print(f"\nData saved to {filename}")
 
     def _save_plot(self):
-        """Generate and save PNG plots"""
+        """Generate and save comprehensive PNG plots with disk I/O"""
         timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-        filename = f"sartop-{timestamp}.png"
+        if not self.base_filename:
+            hostname = os.uname().nodename.split('.')[0]
+            self.base_filename = f"sartop-{hostname}-{timestamp}"
+
+        filename = f"{self.base_filename}_plot.png"
 
         # Prepare data
         times = [datetime.fromisoformat(d['timestamp']) for d in self.history]
@@ -597,40 +996,103 @@ class SARTop:
         rx_data = [sum(iface['rxkB'] for iface in d.get('network', {}).values()) for d in self.history]
         tx_data = [sum(iface['txkB'] for iface in d.get('network', {}).values()) for d in self.history]
 
-        # Create figure with 2x2 subplots
-        fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(14, 10))
-        fig.suptitle(f'System Performance - {timestamp}', fontsize=16)
+        # Disk I/O data
+        disk_read_data = [sum(dev['rkB'] for dev in d.get('disk', {}).values()) for d in self.history]
+        disk_write_data = [sum(dev['wkB'] for dev in d.get('disk', {}).values()) for d in self.history]
+        disk_tps_data = [sum(dev['tps'] for dev in d.get('disk', {}).values()) for d in self.history]
+        disk_await_data = [sum(dev['await'] for dev in d.get('disk', {}).values()) / len(d.get('disk', {}))
+                          if d.get('disk', {}) else 0 for d in self.history]
+        disk_util_data = [max((dev['util'] for dev in d.get('disk', {}).values()), default=0) for d in self.history]
 
-        # CPU Plot
-        ax1.plot(times, cpu_data, 'r-', linewidth=1.5)
-        ax1.set_title('CPU Usage')
+        # Create figure with 3x3 subplots for comprehensive visualization
+        fig = plt.figure(figsize=(20, 14))
+        gs = fig.add_gridspec(3, 3, hspace=0.3, wspace=0.3)
+        fig.suptitle(f'System Performance Analysis - {timestamp}', fontsize=18, fontweight='bold')
+
+        # Row 1: CPU and Memory
+        ax1 = fig.add_subplot(gs[0, 0])
+        ax1.plot(times, cpu_data, 'r-', linewidth=1.5, label='CPU Usage')
+        ax1.fill_between(times, cpu_data, alpha=0.3, color='red')
+        ax1.set_title('CPU Usage', fontweight='bold')
         ax1.set_ylabel('Usage (%)')
         ax1.grid(True, alpha=0.3)
         ax1.set_ylim(0, 100)
+        ax1.legend()
 
-        # Memory Plot
-        ax2.plot(times, mem_data, 'b-', linewidth=1.5)
-        ax2.set_title('Memory Usage')
+        ax2 = fig.add_subplot(gs[0, 1])
+        ax2.plot(times, mem_data, 'b-', linewidth=1.5, label='Memory Usage')
+        ax2.fill_between(times, mem_data, alpha=0.3, color='blue')
+        ax2.set_title('Memory Usage', fontweight='bold')
         ax2.set_ylabel('Usage (%)')
         ax2.grid(True, alpha=0.3)
         ax2.set_ylim(0, 100)
+        ax2.legend()
 
-        # Network RX Plot
-        ax3.plot(times, rx_data, 'g-', linewidth=1.5)
-        ax3.set_title('Network RX')
-        ax3.set_ylabel('kB/s')
+        # Row 1, Col 3: Disk IOPS
+        ax3 = fig.add_subplot(gs[0, 2])
+        ax3.plot(times, disk_tps_data, color='purple', linewidth=1.5, label='IOPS')
+        ax3.fill_between(times, disk_tps_data, alpha=0.3, color='purple')
+        ax3.set_title('Disk IOPS (Transactions/sec)', fontweight='bold')
+        ax3.set_ylabel('TPS')
         ax3.grid(True, alpha=0.3)
+        ax3.legend()
 
-        # Network TX Plot
-        ax4.plot(times, tx_data, 'm-', linewidth=1.5)
-        ax4.set_title('Network TX')
+        # Row 2: Network and Disk I/O Bandwidth
+        ax4 = fig.add_subplot(gs[1, 0])
+        ax4.plot(times, rx_data, 'g-', linewidth=1.5, label='RX')
+        ax4.plot(times, tx_data, 'm-', linewidth=1.5, label='TX')
+        ax4.fill_between(times, rx_data, alpha=0.2, color='green')
+        ax4.fill_between(times, tx_data, alpha=0.2, color='magenta')
+        ax4.set_title('Network Traffic', fontweight='bold')
         ax4.set_ylabel('kB/s')
         ax4.grid(True, alpha=0.3)
+        ax4.legend()
+
+        ax5 = fig.add_subplot(gs[1, 1])
+        ax5.plot(times, disk_read_data, color='#00AA00', linewidth=1.5, label='Read')
+        ax5.plot(times, disk_write_data, color='#FF6600', linewidth=1.5, label='Write')
+        ax5.fill_between(times, disk_read_data, alpha=0.3, color='#00AA00')
+        ax5.fill_between(times, disk_write_data, alpha=0.3, color='#FF6600')
+        ax5.set_title('Disk I/O Bandwidth', fontweight='bold')
+        ax5.set_ylabel('kB/s')
+        ax5.grid(True, alpha=0.3)
+        ax5.legend()
+
+        # Row 2, Col 3: Disk Utilization
+        ax6 = fig.add_subplot(gs[1, 2])
+        ax6.plot(times, disk_util_data, color='#FF0066', linewidth=1.5, label='Max Util')
+        ax6.fill_between(times, disk_util_data, alpha=0.3, color='#FF0066')
+        ax6.set_title('Disk Utilization', fontweight='bold')
+        ax6.set_ylabel('Utilization (%)')
+        ax6.grid(True, alpha=0.3)
+        ax6.set_ylim(0, 100)
+        ax6.legend()
+
+        # Row 3: Disk Latency and Combined View
+        ax7 = fig.add_subplot(gs[2, 0])
+        ax7.plot(times, disk_await_data, color='#FF9900', linewidth=1.5, label='Avg Latency')
+        ax7.fill_between(times, disk_await_data, alpha=0.3, color='#FF9900')
+        ax7.set_title('Disk I/O Latency (await)', fontweight='bold')
+        ax7.set_ylabel('Milliseconds')
+        ax7.grid(True, alpha=0.3)
+        ax7.legend()
+
+        # Row 3, Col 2-3: Stacked area chart for comprehensive I/O view
+        ax8 = fig.add_subplot(gs[2, 1:])
+        ax8.stackplot(times, disk_read_data, disk_write_data,
+                     labels=['Read', 'Write'],
+                     colors=['#00DD00', '#DD6600'],
+                     alpha=0.7)
+        ax8.set_title('Disk I/O - Stacked View', fontweight='bold')
+        ax8.set_ylabel('kB/s')
+        ax8.grid(True, alpha=0.3)
+        ax8.legend(loc='upper left')
 
         # Format x-axis for all plots
-        for ax in [ax1, ax2, ax3, ax4]:
+        for ax in [ax1, ax2, ax3, ax4, ax5, ax6, ax7, ax8]:
             ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M:%S'))
             plt.setp(ax.xaxis.get_majorticklabels(), rotation=45)
+            ax.set_xlabel('Time')
 
         plt.tight_layout()
         plt.savefig(filename, dpi=150, bbox_inches='tight')
@@ -638,32 +1100,96 @@ class SARTop:
 
         print(f"Plot saved to {filename}")
 
-    def _print_summary(self):
-        """Print summary statistics"""
+    def _save_summary(self):
+        """Save and print summary statistics"""
+        if not self.base_filename:
+            timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+            hostname = os.uname().nodename.split('.')[0]
+            self.base_filename = f"sartop-{hostname}-{timestamp}"
+
+        filename = f"{self.base_filename}_summary.txt"
         duration = (datetime.now() - self.start_time).total_seconds()
 
-        print("\n" + "=" * 60)
-        print("System Performance Summary")
-        print("=" * 60)
-        print(f"\nDuration: {int(duration)} seconds")
-        print(f"Samples: {len(self.history)}")
-        print(f"Start: {self.start_time.strftime('%Y-%m-%d %H:%M:%S')}")
-        print(f"End: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        # Build summary content
+        summary_lines = []
+        summary_lines.append("System Performance Summary")
+        summary_lines.append("=" * 60)
+        summary_lines.append("")
+        summary_lines.append(f"Hostname: {os.uname().nodename}")
+        summary_lines.append(f"Duration: {int(duration)} seconds")
+        summary_lines.append(f"Samples: {len(self.history)}")
+        summary_lines.append(f"Start: {self.start_time.isoformat()}")
+        summary_lines.append(f"End: {datetime.now().isoformat()}")
+        summary_lines.append("")
+        summary_lines.append("CPU Usage:")
+        summary_lines.append(f"  Average: {self.stats['cpu']['avg']:.1f}%")
+        summary_lines.append(f"  Max: {self.stats['cpu']['max']:.1f}%")
+        summary_lines.append(f"  Min: {self.stats['cpu']['min']:.1f}%")
+        summary_lines.append("")
+        summary_lines.append("Memory Usage:")
+        summary_lines.append(f"  Average: {self.stats['memory']['avg']:.1f}%")
+        summary_lines.append(f"  Max: {self.stats['memory']['max']:.1f}%")
+        summary_lines.append(f"  Min: {self.stats['memory']['min']:.1f}%")
+        summary_lines.append("")
+        summary_lines.append("Network Traffic:")
+        summary_lines.append(f"  Peak RX: {self.stats['network_rx']['max']:.1f} kB/s")
+        summary_lines.append(f"  Peak TX: {self.stats['network_tx']['max']:.1f} kB/s")
+        summary_lines.append("")
+        summary_lines.append("=" * 60)
+        summary_lines.append("Disk I/O Performance Analysis")
+        summary_lines.append("=" * 60)
+        summary_lines.append("")
+        summary_lines.append("Aggregate Disk I/O:")
+        summary_lines.append("  Read Bandwidth:")
+        summary_lines.append(f"    Average: {self.stats['disk']['read_kBps']['avg']:.1f} kB/s")
+        summary_lines.append(f"    Peak:    {self.stats['disk']['read_kBps']['max']:.1f} kB/s")
+        summary_lines.append("  Write Bandwidth:")
+        summary_lines.append(f"    Average: {self.stats['disk']['write_kBps']['avg']:.1f} kB/s")
+        summary_lines.append(f"    Peak:    {self.stats['disk']['write_kBps']['max']:.1f} kB/s")
+        summary_lines.append("")
+        summary_lines.append("Disk IOPS:")
+        summary_lines.append(f"  Average: {self.stats['disk']['tps']['avg']:.1f} transactions/sec")
+        summary_lines.append(f"  Peak:    {self.stats['disk']['tps']['max']:.1f} transactions/sec")
+        summary_lines.append("")
+        summary_lines.append("Disk Latency (await):")
+        summary_lines.append(f"  Average: {self.stats['disk']['await']['avg']:.2f} ms")
+        summary_lines.append(f"  Peak:    {self.stats['disk']['await']['max']:.2f} ms")
+        if self.stats['disk']['await']['min'] < 999999:
+            summary_lines.append(f"  Min:     {self.stats['disk']['await']['min']:.2f} ms")
+        summary_lines.append("")
+        summary_lines.append("Disk Utilization:")
+        summary_lines.append(f"  Average: {self.stats['disk']['util']['avg']:.1f}%")
+        summary_lines.append(f"  Peak:    {self.stats['disk']['util']['max']:.1f}%")
 
-        print(f"\nCPU Usage:")
-        print(f"  Average: {self.stats['cpu']['avg']:.1f}%")
-        print(f"  Max: {self.stats['cpu']['max']:.1f}%")
-        print(f"  Min: {self.stats['cpu']['min']:.1f}%")
+        # Per-device breakdown
+        if self.stats['disk']['per_device']:
+            summary_lines.append("")
+            summary_lines.append("=" * 60)
+            summary_lines.append("Per-Device Statistics")
+            summary_lines.append("=" * 60)
 
-        print(f"\nMemory Usage:")
-        print(f"  Average: {self.stats['memory']['avg']:.1f}%")
-        print(f"  Max: {self.stats['memory']['max']:.1f}%")
-        print(f"  Min: {self.stats['memory']['min']:.1f}%")
+            for dev_name, dev_stats in sorted(self.stats['disk']['per_device'].items()):
+                summary_lines.append("")
+                summary_lines.append(f"{dev_name}:")
+                summary_lines.append(f"  Read:    Peak {dev_stats['read_max']:.1f} kB/s")
+                summary_lines.append(f"  Write:   Peak {dev_stats['write_max']:.1f} kB/s")
+                summary_lines.append(f"  IOPS:    Peak {dev_stats['tps_max']:.1f} tps")
+                summary_lines.append(f"  Latency: Peak {dev_stats['await_max']:.2f} ms")
+                summary_lines.append(f"  Util:    Peak {dev_stats['util_max']:.1f}%")
+                summary_lines.append(f"  Samples: {dev_stats['samples']}")
 
-        print(f"\nNetwork Traffic:")
-        print(f"  Peak RX: {self.stats['network_rx']['max']:.1f} kB/s")
-        print(f"  Peak TX: {self.stats['network_tx']['max']:.1f} kB/s")
+        # Save to file
+        with open(filename, 'w') as f:
+            f.write('\n'.join(summary_lines))
+            f.write('\n')
+
+        # Print to console
         print()
+        for line in summary_lines:
+            print(line)
+        print()
+
+        print(f"Summary saved to {filename}")
 
 
 def main():
